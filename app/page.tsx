@@ -1,7 +1,7 @@
 "use client";
 import {useCallback,useEffect,useRef,useState} from "react";
 import type {CSSProperties} from "react";
-import {ArrowLeft,ArrowRight,Check,Copy,Gift,Info,RotateCcw,Sparkles} from "lucide-react";
+import {ArrowLeft,ArrowRight,Check,Copy,Gift,Info,RotateCcw} from "lucide-react";
 import {Wheel,prizes} from "@/components/Wheel";
 type Tab="game"|"gifts"|"rules";
 type Win={id:string;prizeId:number;code:string;date:string};
@@ -19,7 +19,7 @@ useEffect(()=>{try{const saved=JSON.parse(localStorage.getItem(STORAGE_KEY)||"[]
 useEffect(()=>{if(hydrated.current){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(history))}catch{}}},[history]);
 const navigate=useCallback((next:Tab)=>{setTab(next);if(next!=="game")setWin(null)},[]);
 const spin=useCallback(()=>{
-if(busy.current)return;busy.current=true;setWin(null);
+if(busy.current)return;busy.current=true;setWin(null);window.Telegram?.WebApp?.HapticFeedback?.impactOccurred?.("light");
 const reduced=window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;const duration=reduced?600:SPIN_DURATION;setSpinDuration(duration);
 const index=Math.floor(Math.random()*prizes.length);
 setRotation(previous=>{const target=(360-((index*60+30)%360))%360;const delta=(target-(((previous%360)+360)%360)+360)%360;return previous+(reduced?0:360*6)+delta});
@@ -41,18 +41,25 @@ return <main className="app-shell">
 {tab==="game"&&win&&selectedPrize&&<section className="result-screen" aria-live="polite">
 <button className="text-back" type="button" onClick={()=>setWin(null)}><ArrowLeft size={18}/> К колесу</button>
 <div className="result-intro"><h1 className="result-title">{selectedPrize.name}</h1></div>
-<div className="result-hero" style={{"--prize-color":selectedPrize.color} as CSSProperties}><div className="hero-grain"/><Sparkles className="star-1" size={26}/><Gift className="hero-gift" size={112} strokeWidth={1.4}/><Sparkles className="star-2" size={17}/></div>
+<div className="result-hero" style={{"--prize-color":selectedPrize.color} as CSSProperties}>
+  <Gift className="photo-fallback" size={72} strokeWidth={1.3} aria-hidden="true"/>
+  <img src={selectedPrize.image} alt={`Иллюстрация приза: ${selectedPrize.name}`} className="reward-photo" loading="eager" onError={(event)=>{event.currentTarget.style.display="none"}}/>
+  <span className="photo-shine" aria-hidden="true"/>
+ </div>
 <div className="promo-card"><span>ТВОЙ ПРОМОКОД</span><div className="promo-code"><strong>{win.code}</strong><button onClick={()=>copy(win.code)} type="button" aria-label="Скопировать код">{copiedCode===win.code?<Check size={22}/>:<Copy size={22}/>}</button></div></div>
 <button className="main-button dark-button" type="button" onClick={()=>navigate("gifts")}><span>МОИ ПОДАРКИ</span><ArrowRight size={22}/></button>
 </section>}
 {tab==="gifts"&&<section className="inner-screen gifts-screen">
 <h1 className="section-title">МОИ<br/>ПОДАРКИ<span className="title-period">.</span></h1><p className="section-description">Все выигрыши в одном месте. Открой подарок, чтобы посмотреть код.</p>
 <div className="section-rule"/>
-{history.length?<div className="gift-list">{history.map((item)=>{const prize=prizes[item.prizeId];if(!prize)return null;return <button className="gift-card" key={item.id} type="button" onClick={()=>showWin(item)}><span className="gift-tile" style={{background:prize.color}}><Gift size={27} strokeWidth={1.5}/></span><span className="gift-card-text"><strong>{prize.name}</strong><span>{item.code}</span></span><ArrowRight size={20} className="gift-arrow"/></button>})}</div>:<div className="empty-state"><Gift size={48} strokeWidth={1.15}/><strong>ПОКА ПУСТО</strong><p>Твой первый подарок ждёт на колесе.</p><button className="main-button" onClick={()=>navigate("game")} type="button"><span>К КОЛЕСУ</span><ArrowRight size={21}/></button></div>}
+{history.length?<div className="gift-list">{history.map((item,index)=>{const prize=prizes[item.prizeId];if(!prize)return null;return <button className="gift-card" style={{animationDelay:`${Math.min(index,7)*65}ms`}} key={item.id} type="button" onClick={()=>showWin(item)}><span className="gift-tile" style={{background:prize.color}}>
+  <Gift size={27} strokeWidth={1.5} aria-hidden="true"/>
+  <img src={prize.image} alt="" loading="lazy" onError={(event)=>{event.currentTarget.style.display="none"}}/>
+ </span><span className="gift-card-text"><strong>{prize.name}</strong><span>{item.code}</span></span><ArrowRight size={20} className="gift-arrow"/></button>})}</div>:<div className="empty-state"><Gift size={48} strokeWidth={1.15}/><strong>ПОКА ПУСТО</strong><p>Твой первый подарок ждёт на колесе.</p><button className="main-button" onClick={()=>navigate("game")} type="button"><span>К КОЛЕСУ</span><ArrowRight size={21}/></button></div>}
 </section>}
 {tab==="rules"&&<section className="inner-screen rules-screen"><h1 className="section-title">ПРОЩЕ<br/>ПРОСТОГО<span className="title-period">.</span></h1>
 <div className="rules-list"><article><span>01</span><div><h2>КРУТИ КОЛЕСО</h2><p>Нажми кнопку и дождись, пока колесо остановится.</p></div></article><article><span>02</span><div><h2>УЗНАЙ СВОЙ ПРИЗ</h2><p>На экране появится результат вращения и код.</p></div></article><article><span>03</span><div><h2>ПОСМОТРИ В «ПОДАРКАХ»</h2><p>Твои результаты сохраняются на этом устройстве.</p></div></article></div>
 <button className="main-button" onClick={()=>navigate("game")} type="button"><span>ПОПРОБОВАТЬ</span><ArrowRight size={21}/></button></section>}
 </div><Nav tab={tab} onChange={navigate}/></main>;
 }
-declare global {interface Window {Telegram?:{WebApp?:{HapticFeedback?:{notificationOccurred:(type:string)=>void}}}}}
+declare global {interface Window {Telegram?:{WebApp?:{HapticFeedback?:{notificationOccurred:(type:string)=>void;impactOccurred?:(style:string)=>void}}}}}

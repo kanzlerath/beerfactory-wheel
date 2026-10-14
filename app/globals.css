@@ -34,3 +34,47 @@
 .gift-card-text{gap:8px}
 @media(max-width:380px){.header{height:88px;padding:4px 20px}.brand img{width:57px;height:76px}.game-screen{padding-top:14px}.wheel-stage{margin:14px auto}}
 @media(max-height:760px) and (max-width:550px){.header{height:85px}.brand img{width:55px;height:73px}.game-screen{padding-top:10px}.wheel-stage{margin:11px auto}}
+
+/* 2026-10: photographic rewards, fixed full-brand center, restrained motion */
+.header{min-height:98px;height:98px;overflow:visible;padding-block:7px}
+.brand,.brand img{overflow:visible;flex-shrink:0}
+.brand img{width:64px;height:88px;object-fit:contain;object-position:center;animation:logo-arrive .6s cubic-bezier(.2,.75,.25,1) both}
+@keyframes logo-arrive{from{opacity:0;transform:translateY(-7px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+.display-title{animation:hero-rise .65s cubic-bezier(.2,.8,.2,1) both}
+.hero-subtitle{animation:hero-rise .65s .09s cubic-bezier(.2,.8,.2,1) both}
+.wheel-stage{isolation:isolate;animation:wheel-arrive .8s .13s cubic-bezier(.16,1,.3,1) both}
+.wheel-stage:before{content:"";position:absolute;inset:0;border-radius:50%;z-index:-1;pointer-events:none;box-shadow:0 0 0 3px rgba(243,195,74,.14),0 0 30px 10px rgba(243,195,74,.11);animation:wheel-aura 5s ease-in-out infinite}
+@keyframes wheel-aura{0%,100%{opacity:.55;transform:scale(.98)}50%{opacity:1;transform:scale(1.035)}}
+@keyframes wheel-arrive{from{opacity:0;transform:translateY(18px) scale(.955)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes hero-rise{from{opacity:0;transform:translateY(13px)}to{opacity:1;transform:translateY(0)}}
+.is-spinning .wheel-pointer{animation:pointer-tick .17s ease-in-out infinite alternate;transform-origin:top center}
+.is-spinning.wheel-stage:before{animation:none}
+@keyframes pointer-tick{from{transform:translateX(-50%) rotate(0)}to{transform:translateX(-50%) rotate(5deg)}}
+.main-button{position:relative;overflow:hidden;isolation:isolate}
+.main-button:before{content:"";position:absolute;inset:0;transform:translateX(-150%) skewX(-20deg);width:42%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.27),transparent);pointer-events:none;animation:button-glint 6s ease-in-out infinite}
+@keyframes button-glint{0%,65%{transform:translateX(-150%) skewX(-20deg)}88%,100%{transform:translateX(400%) skewX(-20deg)}}
+.main-button>svg{transition:transform .22s cubic-bezier(.2,.8,.2,1)}
+.main-button:hover:not(:disabled)>svg{transform:translateX(4px)}
+.main-button:active:not(:disabled){transform:scale(.98)}
+.result-hero{height:clamp(215px,33dvh,298px);margin:18px 0 22px;background:var(--prize-color);overflow:hidden;border-radius:13px;isolation:isolate}
+.photo-fallback{position:absolute;z-index:0;opacity:.35}
+.reward-photo{position:absolute;inset:0;display:block;width:100%;height:100%;object-fit:cover;object-position:center;animation:photo-reveal .8s cubic-bezier(.17,.75,.23,1) both}
+@keyframes photo-reveal{from{opacity:.35;transform:scale(1.085)}to{opacity:1;transform:scale(1)}}
+.photo-shine{pointer-events:none;position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,rgba(0,0,0,.06),transparent 26%,transparent 67%,rgba(0,0,0,.22))}
+.result-title{animation:hero-rise .55s both}
+.promo-card{animation:hero-rise .6s .14s both}
+.gift-tile{overflow:hidden;position:relative;isolation:isolate}
+.gift-tile>svg{position:absolute;z-index:-1}
+.gift-tile img{width:100%;height:100%;object-fit:cover;display:block;border-radius:8px;transition:transform .36s ease}
+.gift-card{animation:gift-item-in .45s both;transition:transform .23s ease,box-shadow .23s ease,border-color .23s ease}
+@keyframes gift-item-in{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.gift-card:hover{transform:translateY(-2px);border-color:#d0c4ae;box-shadow:0 8px 19px rgba(24,20,14,.06)}
+.gift-card:hover .gift-tile img{transform:scale(1.065)}
+.nav-item svg{transition:transform .22s ease}
+.nav-item:active svg{transform:scale(.84)}
+@media(max-width:380px){.header{height:91px;min-height:91px}.brand img{height:81px;width:59px}}
+@media(max-height:760px) and (max-width:550px){.header{height:84px;min-height:84px}.brand img{width:52px;height:74px}.result-hero{height:190px}}
+@media(prefers-reduced-motion:reduce){
+ .brand img,.display-title,.hero-subtitle,.wheel-stage,.wheel-stage:before,.is-spinning .wheel-pointer,.main-button:before,.reward-photo,.result-title,.promo-card,.gift-card{animation:none!important}
+ .main-button>svg,.gift-tile img,.gift-card,.nav-item svg{transition:none!important}
+}
