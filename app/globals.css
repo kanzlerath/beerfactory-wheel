@@ -64,8 +64,8 @@
 .result-title{animation:hero-rise .55s both}
 .promo-card{animation:hero-rise .6s .14s both}
 .gift-tile{overflow:hidden;position:relative;isolation:isolate}
-.gift-tile>svg{position:absolute;z-index:-1}
-.gift-tile img{width:100%;height:100%;object-fit:cover;display:block;border-radius:8px;transition:transform .36s ease}
+.gift-tile>svg{position:absolute;z-index:0}
+.gift-tile img{position:relative;z-index:1;width:100%;height:100%;object-fit:cover;display:block;border-radius:8px;transition:transform .36s ease}
 .gift-card{animation:gift-item-in .45s both;transition:transform .23s ease,box-shadow .23s ease,border-color .23s ease}
 @keyframes gift-item-in{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 .gift-card:hover{transform:translateY(-2px);border-color:#d0c4ae;box-shadow:0 8px 19px rgba(24,20,14,.06)}
