@@ -1,31 +1,60 @@
 "use client";
-import {useEffect,useState} from "react";
-import {ArrowLeft,ArrowRight,Gift,Info,Copy,Check,RotateCcw,Sparkles,Beer,UtensilsCrossed,CakeSlice,Percent} from "lucide-react";
-type Tab="wheel"|"gifts"|"rules";
-type Prize={id:number,title:string,short:string,color:string,ink:string};
-type Win={id:string,prize:string,code:string,createdAt:string};
-const prizes:Prize[]=[
-{id:0,title:"Фирменные гренки",short:"Гренки",color:"#F3C44F",ink:"#181818"},
-{id:1,title:"Десерт",short:"Десерт",color:"#F8F4EC",ink:"#181818"},
-{id:2,title:"Комплимент",short:"Сюрприз",color:"#88B95B",ink:"#181818"},
-{id:3,title:"Скидка 10%",short:"−10%",color:"#D4544E",ink:"#fff"},
-{id:4,title:"Закуска",short:"Закуска",color:"#F3C44F",ink:"#181818"},
-{id:5,title:"Напиток",short:"Напиток",color:"#181818",ink:"#fff"}
-];
-const segments=prizes.map((p,i)=>`${p.color} ${i*60}deg ${(i+1)*60}deg`).join(",");
-function Brand(){return <div className="brand"><span className="brand-mark" aria-hidden="true"><span className="brand-top"><i className="drop">◉</i><i className="wheat">✳</i></span><span className="brand-bottom">NSK</span></span><span className="brand-word"><strong><span>BEER</span><em>FACTORY</em></strong><small>РЕСТОРАН-ПИВОВАРНЯ</small></span></div>}
-export default function Home(){
- const [tab,setTab]=useState<Tab>("wheel"),[win,setWin]=useState<Win|null>(null),[history,setHistory]=useState<Win[]>([]),[angle,setAngle]=useState(0),[spinning,setSpinning]=useState(false),[copied,setCopied]=useState(false);
- useEffect(()=>{try{setHistory(JSON.parse(localStorage.getItem("bf-demo-wins")||"[]"))}catch{}},[]);
- const spin=()=>{if(spinning)return;setWin(null);setSpinning(true);const index=Math.floor(Math.random()*prizes.length);const center=index*60+30;const target=((360-center)%360);const current=((angle%360)+360)%360;const delta=((target-current+360)%360);setAngle(v=>v+360*6+delta);setTimeout(()=>{const next={id:globalThis.crypto?.randomUUID?.()||String(Date.now()),prize:prizes[index].title,code:"DEMO-"+Math.floor(1000+Math.random()*9000),createdAt:new Date().toISOString()};setWin(next);setHistory(previous=>{const updated=[next,...previous];localStorage.setItem("bf-demo-wins",JSON.stringify(updated));return updated});setSpinning(false)},4400)};
- const copy=async(code:string)=>{try{await navigator.clipboard.writeText(code);setCopied(true);setTimeout(()=>setCopied(false),1800)}catch{}};
- const viewWin=(w:Win)=>{setWin(w);setTab("wheel")};
- return <main className="app-shell">
-  <div className="demo-strip">ДЕМО · ПРИЗЫ НЕДЕЙСТВИТЕЛЬНЫ</div>
-  <header className="header"><Brand/><button className="header-link" onClick={()=>setTab("rules")} aria-label="Правила"><Info size={21}/></button></header>
-  {tab==="wheel" && (win ? <section className="result" aria-live="polite"><button className="back" onClick={()=>setWin(null)}><ArrowLeft size={18}/> Назад к колесу</button><div className="result-top"><div className="eyebrow">ТВОЙ ПОДАРОК</div><h1>{win.prize}</h1><div className="prize-drawing"><div className="drawing-orbit orbit1"/><div className="drawing-orbit orbit2"/><div className="prize-medallion"><Sparkles size={31}/><Gift size={86} strokeWidth={1.35}/></div></div></div><div className="ticket"><small>ПРОМОКОД</small><div className="ticket-row"><strong>{win.code}</strong><button onClick={()=>copy(win.code)} aria-label="Скопировать промокод">{copied?<Check size={22}/>:<Copy size={22}/>}</button></div></div><button className="primary dark" onClick={()=>setTab("gifts")}>МОИ ПОДАРКИ <ArrowRight size={19}/></button><p className="fineprint">Демонстрационный промокод. Не действует в ресторане.</p></section> : <section className="play"><div className="eyebrow">РЕСТОРАН-ПИВОВАРНЯ · НОВОСИБИРСК</div><h1>ТВОЙ<br/>СЧАСТЛИВЫЙ<br/>СТОЛ<span className="period">.</span></h1><p className="intro">Лови момент. Крути колесо.<br/>Подарок уже ждёт тебя.</p><div className="wheel-area"><div className="wheel-lights" aria-hidden="true"/><div className="pointer"/><div className="wheel" role="img" aria-label="Колесо призов" style={{transform:`rotate(${angle}deg)`,background:`conic-gradient(from 0deg, ${segments})`,transition:spinning?"transform 4.4s cubic-bezier(.11,.8,.15,1)":"none"}}>{prizes.map((p,i)=><div className="wheel-label" style={{transform:`translate(-50%,-50%) rotate(${i*60+30}deg) translateY(calc(var(--wheel-diameter) * -.325)) rotate(-${i*60+30}deg)`,color:p.ink}} key={p.id}>{p.short}</div>)}<span className="wheel-core"><span>BEER</span><span>FACTORY</span></span></div></div><button className="primary" disabled={spinning} onClick={spin}>{spinning?"КОЛЕСО КРУТИТСЯ...":"КРУТИТЬ КОЛЕСО"} {!spinning&&<ArrowRight size={20}/>}</button><button className="text-action" onClick={()=>setTab("rules")}>Правила акции</button></section>)}
-  {tab==="gifts" && <section className="content"><div className="eyebrow">ТВОЯ КОЛЛЕКЦИЯ</div><h1>МОИ<br/>ПОДАРКИ<span className="period">.</span></h1><p className="subtext">Здесь хранятся результаты тестовых розыгрышей.</p>{history.length===0?<div className="empty"><Gift size={48} strokeWidth={1.25}/><strong>Пока ничего нет</strong><span>Испытай удачу — крути колесо.</span><button className="primary" onClick={()=>setTab("wheel")}>К КОЛЕСУ <ArrowRight size={18}/></button></div>:<div className="gift-list">{history.map((w,i)=><button className="gift-card" key={w.id} onClick={()=>viewWin(w)}><span className="gift-index">{String(i+1).padStart(2,"0")}</span><span className="gift-desc"><strong>{w.prize}</strong><small>{w.code} · ДЕМО</small></span><ArrowRight size={19}/></button>)}</div>}</section>}
-  {tab==="rules" && <section className="content rules"><div className="eyebrow">ВСЁ ПРОСТО</div><h1>ПРАВИЛА<br/>ИГРЫ<span className="period">.</span></h1><div className="rule"><span>01</span><div><h2>Крути колесо</h2><p>Нажми кнопку и дождись результата.</p></div></div><div className="rule"><span>02</span><div><h2>Получай подарок</h2><p>Результат появится на экране и сохранится в разделе «Подарки».</p></div></div><div className="rule"><span>03</span><div><h2>Это демоверсия</h2><p>Пока призы и промокоды тестовые. Для реальной акции потребуются правила, ограничения и серверная проверка Telegram.</p></div></div><button className="primary" onClick={()=>{setTab("wheel");setWin(null)}}>КРУТИТЬ КОЛЕСО <ArrowRight size={18}/></button></section>}
-  <nav className="bottom-nav" aria-label="Навигация"><button className={tab==="wheel"?"active":""} onClick={()=>setTab("wheel")}><RotateCcw size={20}/>ИГРА</button><button className={tab==="gifts"?"active":""} onClick={()=>setTab("gifts")}><Gift size={20}/>ПОДАРКИ</button><button className={tab==="rules"?"active":""} onClick={()=>setTab("rules")}><Info size={20}/>ПРАВИЛА</button></nav>
- </main>
+import {useCallback,useEffect,useRef,useState} from "react";
+import type {CSSProperties} from "react";
+import {ArrowLeft,ArrowRight,Check,Copy,Gift,Info,RotateCcw,Sparkles} from "lucide-react";
+import {Wheel,prizes} from "@/components/Wheel";
+type Tab="game"|"gifts"|"rules";
+type Win={id:string;prizeId:number;code:string;date:string};
+const STORAGE_KEY="beerfactory-wheel-demo-v2";
+const SPIN_DURATION=4700;
+function Logo(){return <div className="brand" aria-label="Beer Factory NSK"><img src="/beerfactory-logo.webp" alt="Beer Factory NSK" width="55" height="73"/><div className="brand-caption"><span>РЕСТОРАН</span><span>ПИВОВАРНЯ</span><b>НОВОСИБИРСК</b></div></div>}
+function Nav({tab,onChange}:{tab:Tab;onChange:(tab:Tab)=>void}){
+const items=[{id:"game" as const,label:"ИГРА",Icon:RotateCcw},{id:"gifts" as const,label:"ПОДАРКИ",Icon:Gift},{id:"rules" as const,label:"ПРАВИЛА",Icon:Info}];
+return <nav className="bottom-nav" aria-label="Основные разделы">{items.map(({id,label,Icon})=><button key={id} type="button" className={tab===id?"nav-item active":"nav-item"} onClick={()=>onChange(id)} aria-current={tab===id?"page":undefined}><Icon size={21} strokeWidth={tab===id?2.35:1.85} aria-hidden="true"/><span>{label}</span></button>)}</nav>
 }
+export default function Home(){
+const [tab,setTab]=useState<Tab>("game"),[win,setWin]=useState<Win|null>(null),[history,setHistory]=useState<Win[]>([]),[rotation,setRotation]=useState(0),[spinning,setSpinning]=useState(false),[spinDuration,setSpinDuration]=useState(SPIN_DURATION),[copiedCode,setCopiedCode]=useState<string|null>(null);
+const hydrated=useRef(false),timer=useRef<ReturnType<typeof setTimeout>|null>(null),busy=useRef(false);
+useEffect(()=>{try{const saved=JSON.parse(localStorage.getItem(STORAGE_KEY)||"[]");if(Array.isArray(saved))setHistory(saved.filter(item=>typeof item?.prizeId==="number"&&typeof item?.code==="string"))}catch{} hydrated.current=true;return()=>{if(timer.current)clearTimeout(timer.current)}},[]);
+useEffect(()=>{if(hydrated.current){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(history))}catch{}}},[history]);
+const navigate=useCallback((next:Tab)=>{setTab(next);if(next!=="game")setWin(null)},[]);
+const spin=useCallback(()=>{
+if(busy.current)return;busy.current=true;setWin(null);
+const reduced=window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;const duration=reduced?600:SPIN_DURATION;setSpinDuration(duration);
+const index=Math.floor(Math.random()*prizes.length);
+setRotation(previous=>{const target=(360-((index*60+30)%360))%360;const delta=(target-(((previous%360)+360)%360)+360)%360;return previous+(reduced?0:360*6)+delta});
+setSpinning(true);
+timer.current=setTimeout(()=>{const next:Win={id:crypto.randomUUID?.()??`${Date.now()}`,prizeId:index,code:`DEMO-${Math.floor(1000+Math.random()*9000)}`,date:new Date().toISOString()};setWin(next);setHistory(previous=>[next,...previous]);setSpinning(false);busy.current=false;window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred("success")},duration+80);
+},[]);
+const copy=async(code:string)=>{try{await navigator.clipboard.writeText(code);setCopiedCode(code);window.setTimeout(()=>setCopiedCode(null),1600)}catch{}};
+const showWin=(selected:Win)=>{setWin(selected);setTab("game")};
+const selectedPrize=win?prizes[win.prizeId]:null;
+return <main className="app-shell">
+<header className="header"><Logo/><span className="header-aside">ТВОЙ ШАНС<br/>НА ПОДАРОК<span className="header-dot">.</span></span></header>
+<div className="app-content" key={tab==="game"?(win?"result":"game"):tab}>
+{tab==="game"&&!win&&<section className="game-screen" aria-label="Розыгрыш подарка">
+<div className="hero-topline"><span className="topline-label"><span className="topline-square"/> КОЛЕСО ПОДАРКОВ</span><span className="demo-label">ДЕМО</span></div>
+<h1 className="display-title">ТВОЙ<br/>СЧАСТЛИВЫЙ<br/>СТОЛ<span className="title-period">.</span></h1>
+<p className="hero-subtitle">Крути колесо и получи приятный<br className="optional-break"/> комплимент от Beer Factory.</p>
+<Wheel rotation={rotation} spinning={spinning} duration={spinDuration}/>
+<button className="main-button" onClick={spin} disabled={spinning} type="button"><span>{spinning?"КОЛЕСО КРУТИТСЯ...":"КРУТИТЬ КОЛЕСО"}</span>{spinning?<span className="spinner" aria-hidden="true"/>:<ArrowRight size={23} strokeWidth={1.8} aria-hidden="true"/>}</button>
+<p className="screen-footnote">Это демонстрация. Призы пока недействительны.</p></section>}
+{tab==="game"&&win&&selectedPrize&&<section className="result-screen" aria-live="polite">
+<button className="text-back" type="button" onClick={()=>setWin(null)}><ArrowLeft size={18}/> К колесу</button>
+<div className="result-intro"><div className="result-rays" aria-hidden="true"><i/><i/><i/><i/><i/></div><span className="overline">ТВОЙ ПОДАРОК</span><h1 className="result-title">{selectedPrize.name}</h1><p>Отличный повод заглянуть к нам!</p></div>
+<div className="result-hero" style={{"--prize-color":selectedPrize.color} as CSSProperties}><div className="hero-grain"/><Sparkles className="star-1" size={26}/><Gift className="hero-gift" size={112} strokeWidth={1.4}/><Sparkles className="star-2" size={17}/><div className="prize-banner">BEER FACTORY · NSK</div></div>
+<div className="promo-card"><span>ТВОЙ ПРОМОКОД</span><div className="promo-code"><strong>{win.code}</strong><button onClick={()=>copy(win.code)} type="button" aria-label="Скопировать код">{copiedCode===win.code?<Check size={22}/>:<Copy size={22}/>}</button></div></div>
+<button className="main-button dark-button" type="button" onClick={()=>navigate("gifts")}><span>МОИ ПОДАРКИ</span><ArrowRight size={22}/></button>
+<p className="screen-footnote">Демо-промокод не действует в ресторане.</p></section>}
+{tab==="gifts"&&<section className="inner-screen gifts-screen">
+<div className="overline">СОХРАНЕНО ДЛЯ ТЕБЯ</div><h1 className="section-title">МОИ<br/>ПОДАРКИ<span className="title-period">.</span></h1><p className="section-description">Все выигрыши в одном месте. Открой подарок, чтобы посмотреть код.</p>
+<div className="section-rule"/>
+{history.length?<div className="gift-list">{history.map((item,index)=>{const prize=prizes[item.prizeId];if(!prize)return null;return <button className="gift-card" key={item.id} type="button" onClick={()=>showWin(item)}><span className="gift-tile" style={{background:prize.color}}><Gift size={27} strokeWidth={1.5}/></span><span className="gift-card-text"><small>ПОДАРОК {String(index+1).padStart(2,"0")}</small><strong>{prize.name}</strong><span>{item.code}</span></span><ArrowRight size={20} className="gift-arrow"/></button>})}</div>:<div className="empty-state"><Gift size={48} strokeWidth={1.15}/><strong>ПОКА ПУСТО</strong><p>Твой первый подарок ждёт на колесе.</p><button className="main-button" onClick={()=>navigate("game")} type="button"><span>К КОЛЕСУ</span><ArrowRight size={21}/></button></div>}
+</section>}
+{tab==="rules"&&<section className="inner-screen rules-screen"><div className="overline">КАК ЭТО РАБОТАЕТ</div><h1 className="section-title">ПРОЩЕ<br/>ПРОСТОГО<span className="title-period">.</span></h1>
+<div className="rules-list"><article><span>01</span><div><h2>КРУТИ КОЛЕСО</h2><p>Нажми кнопку и дождись, пока колесо остановится.</p></div></article><article><span>02</span><div><h2>УЗНАЙ СВОЙ ПРИЗ</h2><p>На экране появится подарок с уникальным демо-кодом.</p></div></article><article><span>03</span><div><h2>ПОСМОТРИ В «ПОДАРКАХ»</h2><p>Тестовые выигрыши сохраняются в этом браузере.</p></div></article></div>
+<p className="rules-notice">Сейчас это макет. Настоящие призы, сроки действия и правила акции будут подключены после реализации серверной части.</p>
+<button className="main-button" onClick={()=>navigate("game")} type="button"><span>ПОПРОБОВАТЬ</span><ArrowRight size={21}/></button></section>}
+</div><Nav tab={tab} onChange={navigate}/></main>;
+}
+declare global {interface Window {Telegram?:{WebApp?:{HapticFeedback?:{notificationOccurred:(type:string)=>void}}}}}
